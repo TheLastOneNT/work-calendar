@@ -49,6 +49,10 @@
         height: 100%;
         overflow-x: hidden;
       }
+      html {
+        -webkit-text-size-adjust: 100%;
+        text-size-adjust: 100%;
+      }
       body {
         margin: 0;
         color: var(--fg);
@@ -208,7 +212,7 @@
         color: #fff;
         font-weight: 700;
         font-variant-numeric: tabular-nums;
-        font-size: 11px; /* было 14px — стало меньше */
+        font-size: 14px; /* было 14px — стало меньше */
         text-align: center;
         letter-spacing: 0.2px;
         text-shadow: 0 1px 0 rgba(0, 0, 0, 0.25);
@@ -350,8 +354,12 @@
           font-size: 11px;
         }
         .earn-val {
-          font-size: 13px;
+          font-size: 12px !important; /* было крупнее — теперь компактно */
+          line-height: 1.05;
         }
+        .earn-cell {
+          padding: 8px 8px;
+        } /* чуть компактнее бокс, чтобы не наезжало */
         .date {
           margin-top: 4px;
         }
@@ -388,7 +396,7 @@
           font-size: 10.5px;
         }
         .earn-val {
-          font-size: 12.5px;
+          font-size: 11px !important;
         }
         .date {
           margin-top: 3px;
@@ -419,8 +427,10 @@
         .weekday {
           font-size: 10px;
         }
-        .earn-val {
-          font-size: 12px;
+        @media (max-width: 340px) {
+          .earn-val {
+            font-size: 10px !important;
+          }
         }
       }
     </style>
