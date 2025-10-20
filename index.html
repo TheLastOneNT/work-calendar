@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <style>
       :root {
-        --bg: #0a0a0a; /* почти чёрный */
+        --bg: #0a0a0a;
         --fg: #e9e9ea;
         --muted: #a0a3a8;
         --card: #121214;
@@ -16,6 +16,7 @@
         --holiday-bg: #211214;
         --holiday-border: #3a1c21;
 
+        /* базовые размеры (десктоп) */
         --gap: 6px;
         --size: 54px;
         --num-font: 18px;
@@ -23,6 +24,7 @@
         --datefont: 11px;
         --radius: 999px;
         --maxw: 1000px;
+        --leftcol: 130px;
 
         --bar-bg: #101115;
         --bar-border: #23242a;
@@ -30,21 +32,22 @@
         --shadow: 0 6px 16px rgba(0, 0, 0, 0.28);
         --subtle: rgba(255, 255, 255, 0.06);
 
-        --today-ring: #f5d34c; /* жёлтый ободок для «сегодня» */
+        --today-ring: #f5d34c;
 
-        /* спокойная, «не выпирающая» шапка */
         --sticky-bg: rgba(12, 12, 12, 0.92);
         --sticky-border: #161616;
         --sticky-shadow: 0 10px 22px rgba(0, 0, 0, 0.22);
         --sticky-inset: inset 0 1px 0 rgba(255, 255, 255, 0.02);
       }
+
       * {
         box-sizing: border-box;
       }
       html,
       body {
         height: 100%;
-      }
+        overflow-x: hidden;
+      } /* страховка от горизонтального скролла */
       body {
         margin: 0;
         color: var(--fg);
@@ -54,7 +57,7 @@
         justify-content: center;
         padding: 0 12px 40px;
 
-        /* Эстетичный тёмный фон: виньетка + лёгкая текстура + мягкий mesh + тонкий шум */
+        /* тёмный премиум-фон */
         background-color: var(--bg);
         background-image: radial-gradient(
             1200px 900px at 50% 10%,
@@ -84,33 +87,32 @@
         background-size: cover, 200% 200%, 120% 120%, 130% 130%, 320px 320px;
       }
 
-      /* контейнер выравнивается с шапкой и сеткой */
       .wrap {
         width: min(var(--maxw), 100%);
         display: flex;
         flex-direction: column;
         align-items: center;
-        padding: 0 8px;
+        padding: 0 8px; /* на десктопе — чуть воздуха */
       }
 
-      /* ── Sticky header: мягкий бокс с паддингами ─────────────────────── */
+      /* ── Sticky header ─────────────────────────────────────────────── */
       .sticky {
         position: sticky;
         top: 0;
         z-index: 50;
         background: var(--sticky-bg);
         border: 1px solid var(--sticky-border);
-        border-radius: 14px; /* мягкие углы */
+        border-radius: 14px;
         box-shadow: var(--sticky-shadow), var(--sticky-inset);
-        margin-top: 8px; /* чтобы не «липло» к верху окна */
+        margin-top: 8px;
         width: 100%;
         max-width: var(--maxw);
       }
       .sticky-inner {
-        padding: 14px 18px 12px; /* внутренние отступы */
+        padding: 14px 18px 12px;
       }
 
-      /* Top progress (working days only) */
+      /* Progress */
       .progress {
         margin-bottom: 10px;
       }
@@ -146,14 +148,14 @@
         transition: width 0.35s ease;
       }
 
-      /* Weekday header (внутри sticky) */
+      /* Header row (Mon..Sun) */
       .header {
         display: grid;
-        grid-template-columns: 130px repeat(7, 1fr);
+        grid-template-columns: var(--leftcol) repeat(7, 1fr);
         gap: var(--gap);
         user-select: none;
-        padding-top: 6px; /* воздух между прогрессом и днями */
-        justify-items: stretch; /* важный фикс: растягиваем содержимое */
+        padding-top: 6px;
+        justify-items: stretch;
         width: 100%;
         max-width: var(--maxw);
       }
@@ -173,20 +175,20 @@
         padding: 2px 0;
       }
 
-      /* Grid with extra first column per week for earnings */
+      /* Main grid */
       .grid {
         display: grid;
-        grid-template-columns: 130px repeat(7, 1fr);
+        grid-template-columns: var(--leftcol) repeat(7, 1fr);
         gap: var(--gap);
         padding-top: 12px;
-        justify-items: stretch; /* фикс одинаковой ширины */
+        justify-items: stretch;
         width: 100%;
         max-width: var(--maxw);
       }
 
       /* Weekly earnings cell */
       .earn-cell {
-        width: 100%; /* одинаковая ширина у всех недель */
+        width: 100%;
         border: 1px solid var(--border);
         background: linear-gradient(180deg, #151517, #101012);
         border-radius: 12px;
@@ -200,7 +202,7 @@
         box-shadow: var(--shadow);
       }
       .earn-val {
-        width: 100%; /* текст не «гуляет» */
+        width: 100%;
         color: #fff;
         font-weight: 800;
         font-variant-numeric: tabular-nums;
@@ -227,7 +229,7 @@
 
       /* Day cells */
       .cell {
-        width: 100%; /* ячейки дней тянутся на всю колонку */
+        width: 100%;
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -250,6 +252,7 @@
         transition: background 0.2s, color 0.2s, border-color 0.2s,
           transform 0.1s, box-shadow 0.2s;
         box-shadow: var(--shadow);
+        max-width: 100%; /* на всякий случай */
       }
       .circle:hover {
         transform: translateY(-1px);
@@ -259,7 +262,6 @@
         outline-offset: 2px;
         box-shadow: 0 0 0 3px rgba(245, 211, 76, 0.12), var(--shadow);
       }
-
       .date {
         margin-top: 6px;
         font-size: var(--datefont);
@@ -296,74 +298,82 @@
         text-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
       }
 
-      /* Focus */
       .circle:focus-visible {
         outline: 2px solid #5ab0ff;
         outline-offset: 3px;
       }
 
-      /* Responsive */
+      /* ── РЕАЛЬНЫЙ МОБИЛЬНЫЙ АДАПТИВ ───────────────────────────────────── */
+
+      /* Планшеты */
       @media (max-width: 800px) {
-        .header,
-        .grid {
-          grid-template-columns: 120px repeat(7, 1fr);
+        :root {
+          --leftcol: 120px;
         }
       }
-      @media (max-width: 720px) {
+
+      /* Телефоны обычные (iPhone 12/13/14/15/16, 390–430px ширина) */
+      @media (max-width: 480px) {
         :root {
-          --size: 48px;
-          --num-font: 17px;
-          --icon-font: 26px;
-          --gap: 5px;
-          --maxw: 100%;
+          /* левая колонка в процентах экрана, чтобы точно влезло */
+          --leftcol: clamp(86px, 24vw, 110px);
+          /* межколоночный зазор уменьшаем, чтобы 8 колонок влазили всегда */
+          --gap: clamp(3px, 1.2vw, 6px);
+          /* диаметр кружков от ширины экрана:
+           9.5vw ≈ 37px на 390px ширине; ограничиваем мин/макс */
+          --size: clamp(26px, 9.5vw, 42px);
+          --num-font: clamp(12px, 3.4vw, 16px);
+          --icon-font: clamp(18px, 5.2vw, 24px);
+          --datefont: clamp(9px, 2.7vw, 11px);
         }
-        .weekday {
-          font-size: 11px;
+        .wrap {
+          padding: 0 6px;
         }
-        .bar {
-          height: 9px;
-        }
-        .earn-cell {
-          padding: 9px 8px;
-        }
-      }
-      @media (max-width: 560px) {
-        :root {
-          --size: 42px;
-          --num-font: 16px;
-          --icon-font: 24px;
-          --gap: 5px;
-          --datefont: 10px;
+        .sticky-inner {
+          padding: 12px 12px 10px;
         }
         .bar {
           height: 8px;
         }
-        .header,
-        .grid {
-          grid-template-columns: 112px repeat(7, 1fr);
-        }
       }
-      @media (max-width: 400px) {
+
+      /* Очень узкие телефоны (375px и ниже — iPhone SE/mini) */
+      @media (max-width: 390px) {
         :root {
-          --size: 38px;
-          --num-font: 15px;
-          --icon-font: 22px;
-          --gap: 4px;
-          --datefont: 10px;
+          --leftcol: clamp(80px, 23.5vw, 100px);
+          --gap: clamp(2px, 1.1vw, 4px);
+          --size: clamp(24px, 9.8vw, 38px);
+          --num-font: clamp(11px, 3.4vw, 15px);
+          --icon-font: clamp(18px, 5.6vw, 22px);
+          --datefont: clamp(9px, 2.9vw, 10px);
         }
-        .bar {
-          height: 7px;
+        .wrap {
+          padding: 0 4px;
+        } /* ещё чуть меньше боковые поля */
+        .sticky {
+          border-radius: 12px;
+        } /* чутка компактнее капсула */
+      }
+
+      /* Ультра-узкие (320–340px) */
+      @media (max-width: 340px) {
+        :root {
+          --leftcol: clamp(74px, 23vw, 92px);
+          --gap: 2px;
+          --size: clamp(22px, 10vw, 34px);
+          --num-font: clamp(10px, 3.3vw, 14px);
+          --icon-font: clamp(16px, 5.5vw, 20px);
+          --datefont: 9px;
         }
-        .header,
-        .grid {
-          grid-template-columns: 104px repeat(7, 1fr);
+        .sticky-inner {
+          padding: 10px 10px 8px;
         }
       }
     </style>
   </head>
   <body>
     <div class="wrap" aria-label="Work calendar">
-      <!-- Sticky header: progress + weekdays -->
+      <!-- Sticky header -->
       <div class="sticky">
         <div class="sticky-inner">
           <!-- Progress -->
@@ -587,7 +597,6 @@
       const TOTAL_TARGET = TOTAL_PAYABLE * DAILY_RATE; // max possible earned
 
       function markToday() {
-        // toggle today mark using NY date
         document
           .querySelectorAll(".today")
           .forEach((el) => el.classList.remove("today"));
@@ -604,13 +613,12 @@
         const nyYMD = ymdInNY(nyNow);
         const hour = nyNow.getHours();
 
-        let doneWorkdays = 0; // for progress
+        let doneWorkdays = 0;
         let earnedTotal = 0;
 
-        // reset week earned
         weekModels.forEach((m) => (m.earned = 0));
 
-        // mark completed workdays (checks)
+        // mark completed workdays (✔)
         workdayCells.forEach((cell) => {
           const ymd = cell.dataset.ymd;
           const circle = cell.querySelector(".circle");
@@ -630,7 +638,7 @@
           }
         });
 
-        // compute earnings over all payable cells (workdays + paid holidays)
+        // earnings over all payable cells (workdays + paid holidays)
         payableCells.forEach((cell) => {
           const ymd = cell.dataset.ymd;
           let credited = false;
@@ -639,14 +647,13 @@
 
           if (credited) {
             earnedTotal += DAILY_RATE;
-            // add to that week's earned
             const weekModel = weekModels.find((m) => m.cells.includes(cell));
             if (weekModel)
               weekModel.earned = (weekModel.earned || 0) + DAILY_RATE;
           }
         });
 
-        // update weekly panels: "$earned_this_week / $target_this_week"
+        // weekly panels
         weekModels.forEach((m) => {
           const earned = Math.min(m.earned || 0, m.target);
           const pct = m.target ? Math.round((earned / m.target) * 100) : 0;
@@ -654,7 +661,7 @@
           m.earnFillEl.style.width = pct + "%";
         });
 
-        // top progress bar (workdays only)
+        // top progress (workdays only)
         const pctTotal = TOTAL_WORKDAYS
           ? Math.round((doneWorkdays / TOTAL_WORKDAYS) * 100)
           : 0;
