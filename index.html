@@ -16,15 +16,19 @@
         --holiday-bg: #211214;
         --holiday-border: #3a1c21;
 
-        /* базовые размеры (десктоп) */
-        --gap: 6px;
-        --size: 54px;
+        /* Десктопные базовые размеры */
+        --gap: 6px; /* gap ХЕДЕРА */
+        --gap-grid: 6px; /* gap СЕТКИ (отдельно!) */
+        --size: 54px; /* диаметр кружков ХЕДЕРА (у нас в хедере только текст, но оставляю как было) */
+        --size-grid: 54px; /* диаметр кружков в СЕТКЕ */
         --num-font: 18px;
         --icon-font: 28px;
         --datefont: 11px;
         --radius: 999px;
         --maxw: 1000px;
-        --leftcol: 130px;
+
+        --leftcol: 130px; /* ширина колонки «Weekly earnings» в ХЕДЕРЕ */
+        --leftcol-grid: 130px; /* ширина колонки «Weekly earnings» в СЕТКЕ */
 
         --bar-bg: #101115;
         --bar-border: #23242a;
@@ -47,7 +51,7 @@
       body {
         height: 100%;
         overflow-x: hidden;
-      } /* страховка от горизонтального скролла */
+      } /* железная страховка от горизонтального скролла */
       body {
         margin: 0;
         color: var(--fg);
@@ -57,7 +61,7 @@
         justify-content: center;
         padding: 0 12px 40px;
 
-        /* тёмный премиум-фон */
+        /* тёмный фон */
         background-color: var(--bg);
         background-image: radial-gradient(
             1200px 900px at 50% 10%,
@@ -92,10 +96,10 @@
         display: flex;
         flex-direction: column;
         align-items: center;
-        padding: 0 8px; /* на десктопе — чуть воздуха */
+        padding: 0 8px;
       }
 
-      /* ── Sticky header ─────────────────────────────────────────────── */
+      /* ── Sticky header (оставляем как есть по размерам) ─────────────── */
       .sticky {
         position: sticky;
         top: 0;
@@ -112,7 +116,6 @@
         padding: 14px 18px 12px;
       }
 
-      /* Progress */
       .progress {
         margin-bottom: 10px;
       }
@@ -148,7 +151,7 @@
         transition: width 0.35s ease;
       }
 
-      /* Header row (Mon..Sun) */
+      /* Weekday row (в хедере) */
       .header {
         display: grid;
         grid-template-columns: var(--leftcol) repeat(7, 1fr);
@@ -175,18 +178,17 @@
         padding: 2px 0;
       }
 
-      /* Main grid */
+      /* ── GRID ниже хедера (адаптируем отдельно!) ───────────────────── */
       .grid {
         display: grid;
-        grid-template-columns: var(--leftcol) repeat(7, 1fr);
-        gap: var(--gap);
+        grid-template-columns: var(--leftcol-grid) repeat(7, 1fr);
+        gap: var(--gap-grid);
         padding-top: 12px;
         justify-items: stretch;
         width: 100%;
         max-width: var(--maxw);
       }
 
-      /* Weekly earnings cell */
       .earn-cell {
         width: 100%;
         border: 1px solid var(--border);
@@ -198,7 +200,7 @@
         align-items: center;
         justify-content: center;
         gap: 8px;
-        min-height: calc(var(--size) + 22px);
+        min-height: calc(var(--size-grid) + 22px);
         box-shadow: var(--shadow);
       }
       .earn-val {
@@ -227,18 +229,17 @@
         transition: width 0.35s ease;
       }
 
-      /* Day cells */
       .cell {
         width: 100%;
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: flex-start;
-        min-height: calc(var(--size) + 22px);
+        min-height: calc(var(--size-grid) + 22px);
       }
       .circle {
-        width: var(--size);
-        height: var(--size);
+        width: var(--size-grid);
+        height: var(--size-grid);
         border: 1px solid var(--border);
         background: var(--card);
         border-radius: var(--radius);
@@ -252,7 +253,7 @@
         transition: background 0.2s, color 0.2s, border-color 0.2s,
           transform 0.1s, box-shadow 0.2s;
         box-shadow: var(--shadow);
-        max-width: 100%; /* на всякий случай */
+        max-width: 100%;
       }
       .circle:hover {
         transform: translateY(-1px);
@@ -270,7 +271,6 @@
         user-select: none;
       }
 
-      /* Weekends */
       .weekend .circle {
         background: var(--weekend);
         color: #d0d0d0;
@@ -280,7 +280,6 @@
         transform: none;
       }
 
-      /* Holidays (red X) */
       .holiday .circle {
         background: var(--holiday-bg);
         border-color: var(--holiday-border);
@@ -289,7 +288,6 @@
         text-shadow: 0 2px 6px rgba(0, 0, 0, 0.45);
       }
 
-      /* Done (green check) */
       .done .circle {
         background: var(--done);
         color: #0c2618;
@@ -303,66 +301,98 @@
         outline-offset: 3px;
       }
 
-      /* ── РЕАЛЬНЫЙ МОБИЛЬНЫЙ АДАПТИВ ───────────────────────────────────── */
+      /* ── RESPONSIVE ─────────────────────────────────────────────────── */
 
-      /* Планшеты */
+      /* лёгкая адаптация планшетов — хедер остаётся прежним */
       @media (max-width: 800px) {
         :root {
           --leftcol: 120px;
         }
+        :root {
+          --leftcol-grid: 120px;
+        }
       }
 
-      /* Телефоны обычные (iPhone 12/13/14/15/16, 390–430px ширина) */
+      /* КЛЮЧ: ЖЁСТКИЙ МОБИЛЬНЫЙ АДАПТИВ ТОЛЬКО ДЛЯ СЕТКИ НИЖЕ ХЕДЕРА */
+      /* Обычные iPhone (390–430px) и ниже */
       @media (max-width: 480px) {
         :root {
-          /* левая колонка в процентах экрана, чтобы точно влезло */
-          --leftcol: clamp(86px, 24vw, 110px);
-          /* межколоночный зазор уменьшаем, чтобы 8 колонок влазили всегда */
-          --gap: clamp(3px, 1.2vw, 6px);
-          /* диаметр кружков от ширины экрана:
-           9.5vw ≈ 37px на 390px ширине; ограничиваем мин/макс */
-          --size: clamp(26px, 9.5vw, 42px);
+          /* хедер НЕ меняем */
+          --gap: 6px;
+          --leftcol: 130px;
+
+          /* сетка: ужимаем отдельно */
+          --leftcol-grid: clamp(78px, 22vw, 100px);
+          --gap-grid: clamp(2px, 1vw, 4px);
+
+          /* диаметр кружка из ширины экрана:
+           100vw - (боковые поля body ~ 24px + внутренние .wrap ~ 16px) - левая колонка - 6 промежутков */
+          --size-grid: clamp(
+            24px,
+            calc(
+              (100vw - 40px - var(--leftcol-grid) - (7 - 1) * var(--gap-grid)) /
+                7
+            ),
+            40px
+          );
+
+          /* тексты поменьше */
           --num-font: clamp(12px, 3.4vw, 16px);
-          --icon-font: clamp(18px, 5.2vw, 24px);
+          --icon-font: clamp(18px, 5.2vw, 22px);
           --datefont: clamp(9px, 2.7vw, 11px);
         }
+        /* уменьшаем только внешние поля сетки (хедер не трогаем) */
         .wrap {
           padding: 0 6px;
         }
-        .sticky-inner {
-          padding: 12px 12px 10px;
+        .grid {
+          padding-top: 10px;
         }
         .bar {
           height: 8px;
         }
       }
 
-      /* Очень узкие телефоны (375px и ниже — iPhone SE/mini) */
+      /* Очень узкие iPhone (≤390px) */
       @media (max-width: 390px) {
         :root {
-          --leftcol: clamp(80px, 23.5vw, 100px);
-          --gap: clamp(2px, 1.1vw, 4px);
-          --size: clamp(24px, 9.8vw, 38px);
-          --num-font: clamp(11px, 3.4vw, 15px);
-          --icon-font: clamp(18px, 5.6vw, 22px);
-          --datefont: clamp(9px, 2.9vw, 10px);
+          --leftcol-grid: clamp(70px, 21vw, 92px);
+          --gap-grid: clamp(2px, 0.9vw, 3px);
+          --size-grid: clamp(
+            22px,
+            calc(
+              (100vw - 36px - var(--leftcol-grid) - (7 - 1) * var(--gap-grid)) /
+                7
+            ),
+            36px
+          );
+          --num-font: clamp(11px, 3.2vw, 15px);
+          --icon-font: clamp(16px, 5vw, 20px);
+          --datefont: clamp(9px, 2.8vw, 10px);
         }
         .wrap {
           padding: 0 4px;
-        } /* ещё чуть меньше боковые поля */
+        }
         .sticky {
           border-radius: 12px;
-        } /* чутка компактнее капсула */
+        }
       }
 
-      /* Ультра-узкие (320–340px) */
+      /* Совсем узкие (≤340px) */
       @media (max-width: 340px) {
         :root {
-          --leftcol: clamp(74px, 23vw, 92px);
-          --gap: 2px;
-          --size: clamp(22px, 10vw, 34px);
-          --num-font: clamp(10px, 3.3vw, 14px);
-          --icon-font: clamp(16px, 5.5vw, 20px);
+          --leftcol-grid: clamp(64px, 20vw, 86px);
+          --gap-grid: 2px;
+          --size-grid: clamp(
+            20px,
+            calc(
+              (100vw - 32px - var(--leftcol-grid) - (7 - 1) * var(--gap-grid)) /
+                7
+            ),
+            32px
+          );
+          --num-font: clamp(10px, 3vw, 14px);
+          --icon-font: clamp(14px, 4.8vw, 18px);
           --datefont: 9px;
         }
         .sticky-inner {
@@ -373,10 +403,9 @@
   </head>
   <body>
     <div class="wrap" aria-label="Work calendar">
-      <!-- Sticky header -->
+      <!-- Sticky header (идеального размера, не меняем) -->
       <div class="sticky">
         <div class="sticky-inner">
-          <!-- Progress -->
           <div class="progress" aria-live="polite">
             <div class="progress-top">
               <div>Progress (working days only)</div>
@@ -395,7 +424,6 @@
             </div>
           </div>
 
-          <!-- Weekdays row -->
           <div class="header" aria-hidden="true">
             <div class="weekhead">Weekly earnings</div>
             <div class="weekday">Mon</div>
@@ -409,36 +437,30 @@
         </div>
       </div>
 
-      <!-- Grid -->
+      <!-- Grid (адаптивная отдельно от хедера) -->
       <div id="grid" class="grid"></div>
     </div>
 
     <script>
       const TZ = "America/New_York";
-      const DAILY_RATE = 125; // $ per payable day
+      const DAILY_RATE = 125;
 
-      // Visible range: up to and including Mar 1, 2026 (Sun)
-      const start = new Date("2025-10-06T00:00:00"); // Monday
-      const endDisplay = new Date("2026-03-01T00:00:00"); // Sunday
-      // Working/pay window for progress/earnings: Oct 6, 2025 -> Feb 27, 2026 (Fri)
+      // Видимый диапазон
+      const start = new Date("2025-10-06T00:00:00"); // Mon
+      const endDisplay = new Date("2026-03-01T00:00:00"); // Sun
+      // Рабочие/оплачиваемые считаем до 27 Feb 2026
       const workEnd = new Date("2026-02-27T00:00:00");
 
-      // Holidays shown with a red X (unpaid unless also in PAID_DAYS)
       const HOLIDAYS_ALL = new Set([
         "2025-11-27",
-        "2025-11-28", // Thanksgiving Thu/Fri
+        "2025-11-28",
         "2025-12-25",
-        "2025-12-26", // Christmas Thu/Fri
+        "2025-12-26",
         "2026-01-01",
-        "2026-01-02", // New Year Thu/Fri
-        "2025-12-15", // custom day off (unpaid)
+        "2026-01-02",
+        "2025-12-15",
       ]);
-      // Paid holidays (still X visually, but credited at 5 PM)
-      const PAID_DAYS = new Set([
-        "2025-11-27", // Thanksgiving (Thu)
-        "2025-12-25", // Christmas Day
-        "2026-01-01", // New Year's Day
-      ]);
+      const PAID_DAYS = new Set(["2025-11-27", "2025-12-25", "2026-01-01"]);
 
       const grid = document.getElementById("grid");
       const barFill = document.getElementById("barFill");
@@ -477,7 +499,7 @@
         return new Date(new Date().toLocaleString("en-US", { timeZone: TZ }));
       }
 
-      // Build all visible dates
+      // Строим дни
       const allDays = [];
       for (
         let d = new Date(start);
@@ -487,20 +509,17 @@
         allDays.push(new Date(d));
       }
 
-      // Group days into calendar weeks (Mon..Sun), start is Monday
+      // По неделям (Mon..Sun)
       const weeks = [];
-      for (let i = 0; i < allDays.length; i += 7) {
+      for (let i = 0; i < allDays.length; i += 7)
         weeks.push(allDays.slice(i, i + 7));
-      }
 
-      // Data structures
-      const workdayCells = []; // only Mon-Fri, not holiday, within work window
-      const payableCells = []; // workdays + paid holidays (within work window)
-      const weekModels = []; // {earnValEl, earnFillEl, target, cells, payable}
+      const workdayCells = [];
+      const payableCells = [];
+      const weekModels = [];
 
-      // Render per week: first column is earnings, then 7 day cells
+      // Рендер
       weeks.forEach((weekDays) => {
-        // Earnings (left column)
         const earnCell = document.createElement("div");
         earnCell.className = "earn-cell";
 
@@ -526,14 +545,13 @@
           payable: [],
         };
 
-        // 7 day cells
         weekDays.forEach((date) => {
           const cell = document.createElement("div");
           cell.className = "cell";
           const ymd = ymdInNY(date);
           cell.dataset.ymd = ymd;
 
-          const wd = date.getDay(); // 0 Sun .. 6 Sat
+          const wd = date.getDay();
           const isWeekend = wd === 0 || wd === 6;
           const isHoliday = HOLIDAYS_ALL.has(ymd);
           const isPaidHoliday = PAID_DAYS.has(ymd);
@@ -543,7 +561,6 @@
           circle.className = "circle";
           circle.tabIndex = 0;
 
-          // tooltip with paid/unpaid note
           let tip = fmtTooltip.format(date);
           if (isHoliday && isPaidHoliday) tip += " • Paid holiday";
           else if (isHoliday) tip += " • Unpaid holiday";
@@ -584,7 +601,7 @@
         weekModels.push(model);
       });
 
-      // Weekly targets = payable days in the week * DAILY_RATE
+      // Цели по неделям
       weekModels.forEach((m) => {
         const targetDays = m.payable.length;
         m.target = targetDays * DAILY_RATE;
@@ -592,9 +609,9 @@
         m.earnFillEl.style.width = "0%";
       });
 
-      const TOTAL_WORKDAYS = workdayCells.length; // for top progress (workdays only)
-      const TOTAL_PAYABLE = payableCells.length; // all payable days (incl. paid holidays)
-      const TOTAL_TARGET = TOTAL_PAYABLE * DAILY_RATE; // max possible earned
+      const TOTAL_WORKDAYS = workdayCells.length;
+      const TOTAL_PAYABLE = payableCells.length;
+      const TOTAL_TARGET = TOTAL_PAYABLE * DAILY_RATE;
 
       function markToday() {
         document
@@ -618,7 +635,6 @@
 
         weekModels.forEach((m) => (m.earned = 0));
 
-        // mark completed workdays (✔)
         workdayCells.forEach((cell) => {
           const ymd = cell.dataset.ymd;
           const circle = cell.querySelector(".circle");
@@ -638,7 +654,6 @@
           }
         });
 
-        // earnings over all payable cells (workdays + paid holidays)
         payableCells.forEach((cell) => {
           const ymd = cell.dataset.ymd;
           let credited = false;
@@ -653,7 +668,6 @@
           }
         });
 
-        // weekly panels
         weekModels.forEach((m) => {
           const earned = Math.min(m.earned || 0, m.target);
           const pct = m.target ? Math.round((earned / m.target) * 100) : 0;
@@ -661,7 +675,6 @@
           m.earnFillEl.style.width = pct + "%";
         });
 
-        // top progress (workdays only)
         const pctTotal = TOTAL_WORKDAYS
           ? Math.round((doneWorkdays / TOTAL_WORKDAYS) * 100)
           : 0;
@@ -669,7 +682,6 @@
         barFill.parentElement.setAttribute("aria-valuenow", String(pctTotal));
         progressNums.textContent = `${doneWorkdays}/${TOTAL_WORKDAYS} (${pctTotal}%)`;
 
-        // total earned text
         earnTotalEl.textContent = `Total earned: $${earnedTotal} / $${TOTAL_TARGET}`;
 
         markToday();
