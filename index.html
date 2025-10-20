@@ -208,7 +208,7 @@
         color: #fff;
         font-weight: 700;
         font-variant-numeric: tabular-nums;
-        font-size: 13px; /* было 14px — стало меньше */
+        font-size: 11px; /* было 14px — стало меньше */
         text-align: center;
         letter-spacing: 0.2px;
         text-shadow: 0 1px 0 rgba(0, 0, 0, 0.25);
@@ -284,12 +284,11 @@
       }
 
       .holiday .circle {
-        background: linear-gradient(180deg, #9d1f2d, #7c0d1b);
-        border-color: #b92737;
+        background: var(--holiday-bg);
+        border-color: var(--holiday-border);
         color: #fff;
         font-size: var(--icon-font);
-        text-shadow: 0 2px 6px rgba(0, 0, 0, 0.55);
-        box-shadow: 0 0 10px rgba(200, 30, 30, 0.35);
+        text-shadow: 0 2px 6px rgba(0, 0, 0, 0.45);
       }
 
       .done .circle {
