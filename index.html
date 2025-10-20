@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Work Calendar</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      :root {
+        --bg: #0a0a0a; /* почти чёрный */
+        --fg: #e9e9ea;
+        --muted: #a0a3a8;
+        --card: #121214;
+        --border: #222327;
+        --weekend: #2c2d33;
+        --done: #22c55e;
+        --holiday-bg: #211214;
+        --holiday-border: #3a1c21;
+
+        --gap: 6px;
+        --size: 54px;
+        --num-font: 18px;
+        --icon-font: 28px;
+        --datefont: 11px;
+        --radius: 999px;
+        --maxw: 1000px;
+
+        --bar-bg: #101115;
+        --bar-border: #23242a;
+
+        --shadow: 0 6px 16px rgba(0, 0, 0, 0.28);
+        --subtle: rgba(255, 255, 255, 0.06);
+
+        --today-ring: #f5d34c; /* жёлтый ободок для «сегодня» */
+
+        /* спокойная, «не выпирающая» шапка */
+        --sticky-bg: rgba(12, 12, 12, 0.92);
+        --sticky-border: #161616;
+        --sticky-shadow: 0 10px 22px rgba(0, 0, 0, 0.22);
+        --sticky-inset: inset 0 1px 0 rgba(255, 255, 255, 0.02);
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        height: 100%;
+      }
+      body {
+        margin: 0;
+        color: var(--fg);
+        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto,
+          Arial, sans-serif;
+        display: flex;
+        justify-content: center;
+        padding: 0 12px 40px;
+
+        /* Эстетичный тёмный фон: виньетка + лёгкая текстура + мягкий mesh + тонкий шум */
+        background-color: var(--bg);
+        background-image: radial-gradient(
+            1200px 900px at 50% 10%,
+            rgba(255, 255, 255, 0.03),
+            transparent 60%
+          ),
+          linear-gradient(
+            135deg,
+            rgba(255, 255, 255, 0.02) 0%,
+            rgba(0, 0, 0, 0) 40%,
+            rgba(255, 255, 255, 0.02) 60%,
+            rgba(0, 0, 0, 0) 100%
+          ),
+          radial-gradient(
+            1000px 700px at 78% 12%,
+            rgba(62, 99, 255, 0.08),
+            transparent 65%
+          ),
+          radial-gradient(
+            900px 650px at 15% 5%,
+            rgba(161, 71, 255, 0.06),
+            transparent 60%
+          ),
+          url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='320' height='320' viewBox='0 0 320 320'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/><feComponentTransfer><feFuncA type='table' tableValues='0 0 0 0.03'/></feComponentTransfer></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+        background-repeat: no-repeat, no-repeat, no-repeat, no-repeat, repeat;
+        background-position: center top, center, right top, left top, 0 0;
+        background-size: cover, 200% 200%, 120% 120%, 130% 130%, 320px 320px;
+      }
+
+      /* контейнер выравнивается с шапкой и сеткой */
+      .wrap {
+        width: min(var(--maxw), 100%);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 0 8px;
+      }
+
+      /* ── Sticky header: мягкий бокс с паддингами ─────────────────────── */
+      .sticky {
+        position: sticky;
+        top: 0;
+        z-index: 50;
+        background: var(--sticky-bg);
+        border: 1px solid var(--sticky-border);
+        border-radius: 14px; /* мягкие углы */
+        box-shadow: var(--sticky-shadow), var(--sticky-inset);
+        margin-top: 8px; /* чтобы не «липло» к верху окна */
+        width: 100%;
+        max-width: var(--maxw);
+      }
+      .sticky-inner {
+        padding: 14px 18px 12px; /* внутренние отступы */
+      }
+
+      /* Top progress (working days only) */
+      .progress {
+        margin-bottom: 10px;
+      }
+      .progress-top {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        align-items: baseline;
+        justify-content: space-between;
+        margin-bottom: 6px;
+        font-size: 13px;
+        color: var(--muted);
+      }
+      .progress-nums,
+      .earn-total {
+        font-variant-numeric: tabular-nums;
+        color: #fff;
+        font-weight: 700;
+      }
+      .bar {
+        width: 100%;
+        height: 10px;
+        background: var(--bar-bg);
+        border: 1px solid var(--bar-border);
+        border-radius: 999px;
+        overflow: hidden;
+        box-shadow: inset 0 1px 0 var(--subtle);
+      }
+      .bar-fill {
+        height: 100%;
+        width: 0%;
+        background: linear-gradient(90deg, #22c55e, #16a34a);
+        transition: width 0.35s ease;
+      }
+
+      /* Weekday header (внутри sticky) */
+      .header {
+        display: grid;
+        grid-template-columns: 130px repeat(7, 1fr);
+        gap: var(--gap);
+        user-select: none;
+        padding-top: 6px; /* воздух между прогрессом и днями */
+        justify-items: stretch; /* важный фикс: растягиваем содержимое */
+        width: 100%;
+        max-width: var(--maxw);
+      }
+      .weekday {
+        text-align: center;
+        font-size: 12px;
+        color: var(--muted);
+        letter-spacing: 0.3px;
+        padding: 2px 0;
+      }
+      .weekhead {
+        font-size: 12px;
+        color: var(--muted);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2px 0;
+      }
+
+      /* Grid with extra first column per week for earnings */
+      .grid {
+        display: grid;
+        grid-template-columns: 130px repeat(7, 1fr);
+        gap: var(--gap);
+        padding-top: 12px;
+        justify-items: stretch; /* фикс одинаковой ширины */
+        width: 100%;
+        max-width: var(--maxw);
+      }
+
+      /* Weekly earnings cell */
+      .earn-cell {
+        width: 100%; /* одинаковая ширина у всех недель */
+        border: 1px solid var(--border);
+        background: linear-gradient(180deg, #151517, #101012);
+        border-radius: 12px;
+        padding: 10px 10px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        min-height: calc(var(--size) + 22px);
+        box-shadow: var(--shadow);
+      }
+      .earn-val {
+        width: 100%; /* текст не «гуляет» */
+        color: #fff;
+        font-weight: 800;
+        font-variant-numeric: tabular-nums;
+        font-size: 14px;
+        text-align: center;
+        letter-spacing: 0.2px;
+        text-shadow: 0 1px 0 rgba(0, 0, 0, 0.25);
+        white-space: nowrap;
+      }
+      .earn-bar {
+        width: 100%;
+        height: 6px;
+        background: var(--bar-bg);
+        border: 1px solid var(--bar-border);
+        border-radius: 999px;
+        overflow: hidden;
+      }
+      .earn-fill {
+        height: 100%;
+        width: 0%;
+        background: linear-gradient(90deg, #22c55e, #16a34a);
+        transition: width 0.35s ease;
+      }
+
+      /* Day cells */
+      .cell {
+        width: 100%; /* ячейки дней тянутся на всю колонку */
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        min-height: calc(var(--size) + 22px);
+      }
+      .circle {
+        width: var(--size);
+        height: var(--size);
+        border: 1px solid var(--border);
+        background: var(--card);
+        border-radius: var(--radius);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+        line-height: 1;
+        user-select: none;
+        font-size: var(--num-font);
+        transition: background 0.2s, color 0.2s, border-color 0.2s,
+          transform 0.1s, box-shadow 0.2s;
+        box-shadow: var(--shadow);
+      }
+      .circle:hover {
+        transform: translateY(-1px);
+      }
+      .today .circle {
+        outline: 2px solid var(--today-ring);
+        outline-offset: 2px;
+        box-shadow: 0 0 0 3px rgba(245, 211, 76, 0.12), var(--shadow);
+      }
+
+      .date {
+        margin-top: 6px;
+        font-size: var(--datefont);
+        color: var(--muted);
+        line-height: 1;
+        user-select: none;
+      }
+
+      /* Weekends */
+      .weekend .circle {
+        background: var(--weekend);
+        color: #d0d0d0;
+        border-color: #47484f;
+      }
+      .weekend .circle:hover {
+        transform: none;
+      }
+
+      /* Holidays (red X) */
+      .holiday .circle {
+        background: var(--holiday-bg);
+        border-color: var(--holiday-border);
+        color: #fff;
+        font-size: var(--icon-font);
+        text-shadow: 0 2px 6px rgba(0, 0, 0, 0.45);
+      }
+
+      /* Done (green check) */
+      .done .circle {
+        background: var(--done);
+        color: #0c2618;
+        border-color: var(--done);
+        font-size: var(--icon-font);
+        text-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+      }
+
+      /* Focus */
+      .circle:focus-visible {
+        outline: 2px solid #5ab0ff;
+        outline-offset: 3px;
+      }
+
+      /* Responsive */
+      @media (max-width: 800px) {
+        .header,
+        .grid {
+          grid-template-columns: 120px repeat(7, 1fr);
+        }
+      }
+      @media (max-width: 720px) {
+        :root {
+          --size: 48px;
+          --num-font: 17px;
+          --icon-font: 26px;
+          --gap: 5px;
+          --maxw: 100%;
+        }
+        .weekday {
+          font-size: 11px;
+        }
+        .bar {
+          height: 9px;
+        }
+        .earn-cell {
+          padding: 9px 8px;
+        }
+      }
+      @media (max-width: 560px) {
+        :root {
+          --size: 42px;
+          --num-font: 16px;
+          --icon-font: 24px;
+          --gap: 5px;
+          --datefont: 10px;
+        }
+        .bar {
+          height: 8px;
+        }
+        .header,
+        .grid {
+          grid-template-columns: 112px repeat(7, 1fr);
+        }
+      }
+      @media (max-width: 400px) {
+        :root {
+          --size: 38px;
+          --num-font: 15px;
+          --icon-font: 22px;
+          --gap: 4px;
+          --datefont: 10px;
+        }
+        .bar {
+          height: 7px;
+        }
+        .header,
+        .grid {
+          grid-template-columns: 104px repeat(7, 1fr);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap" aria-label="Work calendar">
+      <!-- Sticky header: progress + weekdays -->
+      <div class="sticky">
+        <div class="sticky-inner">
+          <!-- Progress -->
+          <div class="progress" aria-live="polite">
+            <div class="progress-top">
+              <div>Progress (working days only)</div>
+              <div class="earn-total" id="earnTotal">$0</div>
+              <div class="progress-nums" id="progressNums">0/0 (0%)</div>
+            </div>
+            <div
+              class="bar"
+              role="progressbar"
+              aria-valuemin="0"
+              aria-valuemax="100"
+              aria-valuenow="0"
+              aria-label="Workdays progress"
+            >
+              <div class="bar-fill" id="barFill" style="width: 0%"></div>
+            </div>
+          </div>
+
+          <!-- Weekdays row -->
+          <div class="header" aria-hidden="true">
+            <div class="weekhead">Weekly earnings</div>
+            <div class="weekday">Mon</div>
+            <div class="weekday">Tue</div>
+            <div class="weekday">Wed</div>
+            <div class="weekday">Thu</div>
+            <div class="weekday">Fri</div>
+            <div class="weekday">Sat</div>
+            <div class="weekday">Sun</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Grid -->
+      <div id="grid" class="grid"></div>
+    </div>
+
+    <script>
+      const TZ = "America/New_York";
+      const DAILY_RATE = 125; // $ per payable day
+
+      // Visible range: up to and including Mar 1, 2026 (Sun)
+      const start = new Date("2025-10-06T00:00:00"); // Monday
+      const endDisplay = new Date("2026-03-01T00:00:00"); // Sunday
+      // Working/pay window for progress/earnings: Oct 6, 2025 -> Feb 27, 2026 (Fri)
+      const workEnd = new Date("2026-02-27T00:00:00");
+
+      // Holidays shown with a red X (unpaid unless also in PAID_DAYS)
+      const HOLIDAYS_ALL = new Set([
+        "2025-11-27",
+        "2025-11-28", // Thanksgiving Thu/Fri
+        "2025-12-25",
+        "2025-12-26", // Christmas Thu/Fri
+        "2026-01-01",
+        "2026-01-02", // New Year Thu/Fri
+        "2025-12-15", // custom day off (unpaid)
+      ]);
+      // Paid holidays (still X visually, but credited at 5 PM)
+      const PAID_DAYS = new Set([
+        "2025-11-27", // Thanksgiving (Thu)
+        "2025-12-25", // Christmas Day
+        "2026-01-01", // New Year's Day
+      ]);
+
+      const grid = document.getElementById("grid");
+      const barFill = document.getElementById("barFill");
+      const progressNums = document.getElementById("progressNums");
+      const earnTotalEl = document.getElementById("earnTotal");
+
+      const fmtTooltip = new Intl.DateTimeFormat("en-US", {
+        weekday: "short",
+        month: "short",
+        day: "2-digit",
+        year: "numeric",
+        timeZone: TZ,
+      });
+      const fmtDay = new Intl.DateTimeFormat("en-US", {
+        day: "2-digit",
+        timeZone: TZ,
+      });
+      const fmtMonth = new Intl.DateTimeFormat("en-US", {
+        month: "short",
+        timeZone: TZ,
+      });
+
+      function ymdInNY(d) {
+        const parts = new Intl.DateTimeFormat("en-CA", {
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+          timeZone: TZ,
+        }).formatToParts(d);
+        const y = parts.find((p) => p.type === "year").value;
+        const m = parts.find((p) => p.type === "month").value;
+        const da = parts.find((p) => p.type === "day").value;
+        return `${y}-${m}-${da}`;
+      }
+      function nowInNY() {
+        return new Date(new Date().toLocaleString("en-US", { timeZone: TZ }));
+      }
+
+      // Build all visible dates
+      const allDays = [];
+      for (
+        let d = new Date(start);
+        d <= endDisplay;
+        d.setDate(d.getDate() + 1)
+      ) {
+        allDays.push(new Date(d));
+      }
+
+      // Group days into calendar weeks (Mon..Sun), start is Monday
+      const weeks = [];
+      for (let i = 0; i < allDays.length; i += 7) {
+        weeks.push(allDays.slice(i, i + 7));
+      }
+
+      // Data structures
+      const workdayCells = []; // only Mon-Fri, not holiday, within work window
+      const payableCells = []; // workdays + paid holidays (within work window)
+      const weekModels = []; // {earnValEl, earnFillEl, target, cells, payable}
+
+      // Render per week: first column is earnings, then 7 day cells
+      weeks.forEach((weekDays) => {
+        // Earnings (left column)
+        const earnCell = document.createElement("div");
+        earnCell.className = "earn-cell";
+
+        const earnVal = document.createElement("div");
+        earnVal.className = "earn-val";
+        earnVal.textContent = "$0 / $0";
+
+        const earnBar = document.createElement("div");
+        earnBar.className = "earn-bar";
+        const earnFill = document.createElement("div");
+        earnFill.className = "earn-fill";
+        earnBar.appendChild(earnFill);
+
+        earnCell.appendChild(earnVal);
+        earnCell.appendChild(earnBar);
+        grid.appendChild(earnCell);
+
+        const model = {
+          earnValEl: earnVal,
+          earnFillEl: earnFill,
+          target: 0,
+          cells: [],
+          payable: [],
+        };
+
+        // 7 day cells
+        weekDays.forEach((date) => {
+          const cell = document.createElement("div");
+          cell.className = "cell";
+          const ymd = ymdInNY(date);
+          cell.dataset.ymd = ymd;
+
+          const wd = date.getDay(); // 0 Sun .. 6 Sat
+          const isWeekend = wd === 0 || wd === 6;
+          const isHoliday = HOLIDAYS_ALL.has(ymd);
+          const isPaidHoliday = PAID_DAYS.has(ymd);
+          const withinWorkWindow = date <= workEnd;
+
+          const circle = document.createElement("div");
+          circle.className = "circle";
+          circle.tabIndex = 0;
+
+          // tooltip with paid/unpaid note
+          let tip = fmtTooltip.format(date);
+          if (isHoliday && isPaidHoliday) tip += " • Paid holiday";
+          else if (isHoliday) tip += " • Unpaid holiday";
+          circle.title = tip;
+
+          const number = String(Number(fmtDay.format(date)));
+          circle.textContent = number;
+          circle.dataset.number = number;
+
+          const dateLabel = document.createElement("div");
+          dateLabel.className = "date";
+          dateLabel.textContent = `${number} ${fmtMonth.format(date)}`;
+
+          if (isHoliday) {
+            cell.classList.add("holiday");
+            circle.textContent = "✖";
+            if (withinWorkWindow && isPaidHoliday) {
+              model.payable.push(cell);
+              payableCells.push(cell);
+            }
+          } else if (isWeekend) {
+            cell.classList.add("weekend");
+          } else {
+            if (withinWorkWindow) {
+              workdayCells.push(cell);
+              model.payable.push(cell);
+              payableCells.push(cell);
+            }
+          }
+
+          cell.appendChild(circle);
+          cell.appendChild(dateLabel);
+          grid.appendChild(cell);
+
+          model.cells.push(cell);
+        });
+
+        weekModels.push(model);
+      });
+
+      // Weekly targets = payable days in the week * DAILY_RATE
+      weekModels.forEach((m) => {
+        const targetDays = m.payable.length;
+        m.target = targetDays * DAILY_RATE;
+        m.earnValEl.textContent = `$0 / $${m.target}`;
+        m.earnFillEl.style.width = "0%";
+      });
+
+      const TOTAL_WORKDAYS = workdayCells.length; // for top progress (workdays only)
+      const TOTAL_PAYABLE = payableCells.length; // all payable days (incl. paid holidays)
+      const TOTAL_TARGET = TOTAL_PAYABLE * DAILY_RATE; // max possible earned
+
+      function markToday() {
+        // toggle today mark using NY date
+        document
+          .querySelectorAll(".today")
+          .forEach((el) => el.classList.remove("today"));
+        const nyNow = nowInNY();
+        const todayYMD = ymdInNY(nyNow);
+        const todayCell = document.querySelector(
+          `.cell[data-ymd="${todayYMD}"]`
+        );
+        if (todayCell) todayCell.classList.add("today");
+      }
+
+      function updateState() {
+        const nyNow = nowInNY();
+        const nyYMD = ymdInNY(nyNow);
+        const hour = nyNow.getHours();
+
+        let doneWorkdays = 0; // for progress
+        let earnedTotal = 0;
+
+        // reset week earned
+        weekModels.forEach((m) => (m.earned = 0));
+
+        // mark completed workdays (checks)
+        workdayCells.forEach((cell) => {
+          const ymd = cell.dataset.ymd;
+          const circle = cell.querySelector(".circle");
+          if (!circle) return;
+
+          let isDone = false;
+          if (ymd < nyYMD) isDone = true;
+          else if (ymd === nyYMD && hour >= 17) isDone = true;
+
+          if (isDone) {
+            cell.classList.add("done");
+            circle.textContent = "✔";
+            doneWorkdays++;
+          } else {
+            cell.classList.remove("done");
+            circle.textContent = circle.dataset.number;
+          }
+        });
+
+        // compute earnings over all payable cells (workdays + paid holidays)
+        payableCells.forEach((cell) => {
+          const ymd = cell.dataset.ymd;
+          let credited = false;
+          if (ymd < nyYMD) credited = true;
+          else if (ymd === nyYMD && hour >= 17) credited = true;
+
+          if (credited) {
+            earnedTotal += DAILY_RATE;
+            // add to that week's earned
+            const weekModel = weekModels.find((m) => m.cells.includes(cell));
+            if (weekModel)
+              weekModel.earned = (weekModel.earned || 0) + DAILY_RATE;
+          }
+        });
+
+        // update weekly panels: "$earned_this_week / $target_this_week"
+        weekModels.forEach((m) => {
+          const earned = Math.min(m.earned || 0, m.target);
+          const pct = m.target ? Math.round((earned / m.target) * 100) : 0;
+          m.earnValEl.textContent = `$${earned} / $${m.target}`;
+          m.earnFillEl.style.width = pct + "%";
+        });
+
+        // top progress bar (workdays only)
+        const pctTotal = TOTAL_WORKDAYS
+          ? Math.round((doneWorkdays / TOTAL_WORKDAYS) * 100)
+          : 0;
+        barFill.style.width = pctTotal + "%";
+        barFill.parentElement.setAttribute("aria-valuenow", String(pctTotal));
+        progressNums.textContent = `${doneWorkdays}/${TOTAL_WORKDAYS} (${pctTotal}%)`;
+
+        // total earned text
+        earnTotalEl.textContent = `Total earned: $${earnedTotal} / $${TOTAL_TARGET}`;
+
+        markToday();
+      }
+
+      updateState();
+      setInterval(updateState, 60_000);
+    </script>
+  </body>
+</html>
