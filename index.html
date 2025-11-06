@@ -488,6 +488,8 @@
 
       // Holidays (unpaid unless in PAID_DAYS)
       const HOLIDAYS_ALL = new Set([
+        "2025-10-30",
+        "2025-11-03",
         "2025-11-27",
         "2025-11-28",
         "2025-12-25",
@@ -733,6 +735,34 @@
 
       updateState();
       setInterval(updateState, 60_000);
+
+      // Savings projection: +$500 weekly, -$500 first week each month except October
+      const SAVINGS_START = 0;
+      let savings = SAVINGS_START;
+
+      weeks.forEach((weekDays, i) => {
+        const earnCell = grid.children[i * 8]; // каждая неделя — 8 колонок (1 + 7 дней)
+        const note = document.createElement("div");
+        note.style.fontSize = "11px";
+        note.style.color = "rgba(255,255,255,0.35)";
+        note.style.marginTop = "2px";
+        note.style.fontVariantNumeric = "tabular-nums";
+
+        const firstDay = weekDays[0];
+        const month = firstDay.getMonth(); // 0-based: 0=Jan, 9=Oct
+        const year = firstDay.getFullYear();
+
+        // начисляем 500 каждую неделю
+        savings += 500;
+
+        // вычитаем 500 за аренду, если это первая неделя месяца (кроме октября)
+        const isFirstWeekOfMonth =
+          firstDay.getDate() <= 7 && !(month === 9 && year === 2025);
+        if (isFirstWeekOfMonth) savings -= 500;
+
+        note.textContent = `~$${savings.toLocaleString("en-US")}`;
+        earnCell.appendChild(note);
+      });
     </script>
   </body>
 </html>
