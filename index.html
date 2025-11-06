@@ -741,26 +741,25 @@
       let savings = SAVINGS_START;
 
       weeks.forEach((weekDays, i) => {
-        const earnCell = grid.children[i * 8]; // каждая неделя — 8 колонок (1 + 7 дней)
+        const earnCell = grid.children[i * 8]; // колонка недели + 7 дней (см. рендер сетки)
+        earnCell.style.position = "relative";
+
         const note = document.createElement("div");
-        note.style.fontSize = "11px";
-        note.style.color = "rgba(255,255,255,0.35)";
-        note.style.marginTop = "2px";
-        note.style.fontVariantNumeric = "tabular-nums";
+        note.className = "earn-note";
 
         const firstDay = weekDays[0];
-        const month = firstDay.getMonth(); // 0-based: 0=Jan, 9=Oct
+        const month = firstDay.getMonth(); // 0=Jan ... 9=Oct
         const year = firstDay.getFullYear();
 
-        // начисляем 500 каждую неделю
-        savings += 500;
-
-        // вычитаем 500 за аренду, если это первая неделя месяца (кроме октября)
+        // 1) Рента в первую неделю месяца (кроме октября 2025)
         const isFirstWeekOfMonth =
           firstDay.getDate() <= 7 && !(month === 9 && year === 2025);
         if (isFirstWeekOfMonth) savings -= 500;
 
-        note.textContent = `~$${savings.toLocaleString("en-US")}`;
+        // 2) Доход приходит с лагом: за прошлую неделю
+        if (i > 0) savings += 500;
+
+        note.textContent = `~$${Math.max(0, savings).toLocaleString("en-US")}`;
         earnCell.appendChild(note);
       });
     </script>
