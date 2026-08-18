@@ -4,71 +4,69 @@ var START_UTC=Date.UTC(2026,7,17);
 var END_UTC=Date.UTC(2027,0,23);
 var DAY=86400000;
 var TOTAL=Math.round((END_UTC-START_UTC)/DAY); // 159
+var CELL=12;
+var W=TOTAL*CELL;
+var H=46;
+var YELLOW='#ffd21a';
+var RED='#ff3b30';
 function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
-function todayIndex(){
+function completedDays(){
   var d=new Date();
   var localAsUTC=Date.UTC(d.getFullYear(),d.getMonth(),d.getDate());
-  return clamp(Math.round((localAsUTC-START_UTC)/DAY),0,TOTAL);
+  return clamp(Math.floor((localAsUTC-START_UTC)/DAY),0,TOTAL);
 }
-function applyRoadFix(){
-  var completed=todayIndex();
+function makeChevron(i,fill,isToday){
+  var x=i*CELL;
+  var gap=2;
+  var w=CELL-gap;
+  var x1=x;
+  var x2=x+w*.58;
+  var x3=x+w;
+  var x4=x+w*.28;
+  var d='M '+x1+' 3 H '+x2+' L '+x3+' 23 L '+x2+' 43 H '+x1+' L '+x4+' 23 Z';
+  return '<path d="'+d+'" fill="'+fill+'" opacity="'+(fill===RED?'1':'.9')+'"'+(isToday?' filter="drop-shadow(0 0 5px rgba(255,210,26,.9))"':'')+'/>';
+}
+function render(){
+  var completed=completedDays();
   var progress=completed/TOTAL*100;
   var svg=document.querySelector('.roadsvg');
-  var red=document.getElementById('redfill');
-  var marker=document.getElementById('todayArrow');
   var road=document.getElementById('road');
   var scroller=document.getElementById('scroller');
   var pct=document.getElementById('pct');
-  if(!svg||!red)return;
+  if(!svg)return;
 
-  // Keep one calendar day visually equal to one 10px chevron on iPhone.
-  // 159 days × 10px = 1590px; horizontal scrolling is intentional.
   if(road){
-    road.style.width='1590px';
-    road.style.minWidth='1590px';
+    road.style.width=W+'px';
+    road.style.minWidth=W+'px';
   }
+  svg.setAttribute('viewBox','0 0 '+W+' '+H);
+  svg.setAttribute('preserveAspectRatio','none');
 
-  var vb=1590;
-  try{if(svg.viewBox&&svg.viewBox.baseVal&&svg.viewBox.baseVal.width)vb=svg.viewBox.baseVal.width}catch(e){}
-  var dayWidth=vb/TOTAL;
-  var completedWidth=completed*dayWidth;
-
-  red.setAttribute('x','0');
-  red.setAttribute('y','0');
-  red.setAttribute('width',completedWidth.toFixed(3));
-  red.setAttribute('height','46');
-  red.setAttribute('fill','url(#past)');
-  red.style.display='block';
-  red.style.opacity='1';
-  red.style.visibility='visible';
-  red.style.filter=completed>0?'drop-shadow(0 0 3px rgba(255,59,48,.38))':'none';
-
-  if(marker){
-    if(completed<TOTAL){
-      marker.style.opacity='1';
-      marker.setAttribute('transform','translate('+(completed*dayWidth).toFixed(3)+' 0)');
-    }else{
-      marker.style.opacity='0';
-    }
+  var html='';
+  for(var i=0;i<TOTAL;i++){
+    var fill=i<completed?RED:YELLOW;
+    var today=(i===completed && completed<TOTAL);
+    html+=makeChevron(i,fill,today);
   }
+  svg.innerHTML=html;
 
   if(pct)pct.textContent=progress.toFixed(1);
 
   if(scroller&&road){
     requestAnimationFrame(function(){
-      var x=road.scrollWidth*(progress/100);
+      var x=completed*CELL;
       var target=x-scroller.clientWidth*.42;
       var max=Math.max(0,road.scrollWidth-scroller.clientWidth);
       scroller.scrollLeft=clamp(target,0,max);
     });
   }
 
-  // Useful for checking the live page in Safari dev tools / future debugging.
   document.documentElement.dataset.completedDays=String(completed);
+  document.documentElement.dataset.roadRenderer='explicit-chevrons-v2';
 }
-requestAnimationFrame(applyRoadFix);
-setTimeout(applyRoadFix,60);
-setTimeout(applyRoadFix,300);
-document.addEventListener('visibilitychange',function(){if(!document.hidden)applyRoadFix()});
-window.addEventListener('pageshow',applyRoadFix);
+requestAnimationFrame(render);
+setTimeout(render,80);
+setTimeout(render,350);
+document.addEventListener('visibilitychange',function(){if(!document.hidden)render()});
+window.addEventListener('pageshow',render);
 })();
