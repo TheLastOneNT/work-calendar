@@ -1,10 +1,10 @@
 (function(){
 'use strict';
-var START_UTC=Date.UTC(2026,7,17);
-var END_UTC=Date.UTC(2027,0,23);
+var START_UTC=Date.UTC(2026,10,1);
+var END_UTC=Date.UTC(2027,0,1);
 var DAY=86400000;
-var TOTAL=Math.round((END_UTC-START_UTC)/DAY); // 159
-var CELL=12;
+var TOTAL=Math.round((END_UTC-START_UTC)/DAY); // 61
+var CELL=19;
 var W=TOTAL*CELL;
 var H=46;
 var YELLOW='#ffd21a';
